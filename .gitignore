@@ -1,0 +1,11 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs
+!*/
+
+4-grams-francais-ALPHA.save.zip
+*.o
