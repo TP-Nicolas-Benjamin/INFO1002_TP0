@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <algorithm>
 #include <math.h>
 
 using namespace std;
@@ -11,6 +12,15 @@ using namespace std;
 
 map<string, double> log_tetragrammes {};
 int total_tetragrammes = 0;
+
+char alphabet[] = {
+    'A', 'B', 'C', 'D', 'E',
+    'F', 'G', 'H', 'I', 'K',
+    'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U',
+    'V', 'W', 'X', 'Y', 'Z'
+};
+vector<char> key = {};
 
 vector<string> split (const string &s, char delim) {
     vector<string> result;
@@ -69,10 +79,42 @@ double score(string text) {
     return score;
 }
 
+vector<char> genere_cle(string texte) {
+    vector<char> k = {};
+    for (char& c : texte) {
+        if (find(k.begin(), k.end(), c) == k.end()) {
+            if (c == 'J') k.push_back('I');
+            else k.push_back(c);
+        }
+    }
+
+    for (char& c : alphabet) {
+        if (find(k.begin(), k.end(), c) == k.end()) {
+            k.push_back(c);
+        }
+    }
+
+    return k;
+}
+
+void affiche_cle(vector<char> k) {
+    int counter = 0;
+
+    cout << "Current key is : " << endl;
+    for (char& c : k) {
+        counter++;
+        cout << c << " ";
+        if (counter % 5 == 0) {
+            cout << endl;
+        }
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     string filename = argv[1];
-    string text = argv[2];
+    string keyword_gen = argv[2];
+    string text = argv[3];
     
     // Initialisation
     set_total(filename);
@@ -82,5 +124,9 @@ int main(int argc, char const *argv[])
 
     // Calculate score of text
     cout << "Score of " << text << " : " << score(text) << endl << endl;
+
+    key = genere_cle(keyword_gen);
+    affiche_cle(key);
+
     return 0;
 }
