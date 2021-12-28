@@ -53,7 +53,7 @@ void log_init(string filename) {
 }
 
 double prob(string str) {
-    return log_tetragrammes[str];
+    return log_tetragrammes.count(str) ? log_tetragrammes[str] : log(0.01/total_tetragrammes);
 }
 
 double score(string text) {
@@ -62,7 +62,7 @@ double score(string text) {
     for (int i = 0; i < text.length()-3; i++) {
         string txt = text.substr(i, 4);
         double p = prob(txt);
-        cout << txt << " " << p << endl;
+        // cout << txt << " " << p << endl;
         score += p;
     }
 
@@ -71,10 +71,16 @@ double score(string text) {
 
 int main(int argc, char const *argv[])
 {
-    cout << 95675200 << endl;
-    set_total(argv[1]);
-    cout << total_tetragrammes << endl;
-    log_init(argv[1]);
-    cout << score(argv[2]) << endl;
+    string filename = argv[1];
+    string text = argv[2];
+    
+    // Initialisation
+    set_total(filename);
+    cout << "\n\nTotal tetragrammes : " << total_tetragrammes << endl;
+    log_init(filename);
+    cout << "Initialisation done -----\n\n" << endl;
+
+    // Calculate score of text
+    cout << "Score of " << text << " : " << score(text) << endl << endl;
     return 0;
 }
