@@ -196,29 +196,72 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
         }
     }
 
-    cout << xa << "\t" << xb << endl;
-    cout << ya << "\t" << yb << endl;
+    // cout << xa << "\t" << xb << endl;
+    // cout << ya << "\t" << yb << endl;
     if (xa != -1 && xb != -1 && ya != -1 && yb != -1) {
         pair<char, char> res;
 
         if (ya == yb) {
-            cout << "on same line" << endl;
+            // cout << "on same line" << endl;
             res.first = k[ya][(xa+1) % k[ya].size()];
             res.second = k[yb][(xb+1) % k[yb].size()];
         } else if (xa == xb) {
-            cout << "on same column" << endl;
+            // cout << "on same column" << endl;
             res.first = k[(ya+1) % k.size()][xa];
             res.second = k[(yb+1) % k.size()][xb];
         } else {
-            cout << "different column and line" << endl;
+            // cout << "different column and line" << endl;
             res.first = k[ya][xb];
             res.second = k[yb][xa];
         }
         return res;
     } else {
-        cout << "Une des lettres n'est pas disponible dans la clé !\n";
+        // cout << "Une des lettres n'est pas disponible dans la clé !\n";
         return make_pair(a,b);
     }
+}
+
+string chiffre_texte(string text, vector<vector<char>> k) {
+
+    string res = "";
+    char charToCypher = '\0';
+
+    for (char& c : text) {
+        // if (key_contains_char(k, c)) {
+            if (charToCypher == '\0') charToCypher = c;
+            else {
+                if (c != charToCypher) {
+                    // cout << endl << "----------\n" << charToCypher << "\t" << c << endl;
+                    pair<char, char> p = chiffre_pair(k, charToCypher, c);
+                    // cout << charToCypher << " -> " << p.first << "\t" << c << " -> " << p.second << endl;
+                    res.push_back(p.first);
+                    res.push_back(p.second);
+                    charToCypher = '\0';
+                } else {
+                    res.push_back(charToCypher);
+                    res.push_back('X');
+                    res.push_back(c);
+                    charToCypher = '\0';
+                }
+            }
+        // }
+    }
+    if (charToCypher != '\0') {
+        pair<char, char> p = chiffre_pair(k, charToCypher, 'X');
+        res.push_back(p.first);
+        res.push_back(p.second);
+    }
+
+    return res;
+}
+
+void text_to_valid(string& text) {
+    // string tmp = text;
+    transform(text.begin(), text.end(), text.begin(), ::toupper);
+    // TODO : vérifier si nécessaire
+        // replace(tmp.begin(), tmp.end(), ' ', '\0');
+    text.erase(std::remove_if(text.begin(), text.end(), [](char c) { return !std::isalpha(c); }), text.end());
+    // return tmp;
 }
 
 int main(int argc, char const *argv[])
@@ -226,6 +269,10 @@ int main(int argc, char const *argv[])
     string filename = argv[1];
     string keyword_gen = argv[2];
     string text = argv[3];
+    string textToCypher = argv[4];
+    text_to_valid(textToCypher);
+    // transform(textToCypher.begin(), textToCypher.end(), textToCypher.begin(), ::toupper);
+    // replace(textToCypher.begin(), textToCypher.end(), ' ', '\0');
     
     // Initialisation
     set_total(filename);
@@ -239,25 +286,26 @@ int main(int argc, char const *argv[])
     key = genere_cle(keyword_gen);
     affiche_cle(key);
 
-    // Avec 2 lettres trouvées
-    cout << endl << "----------\nI\tK" << endl;
-    auto p = chiffre_pair(key, 'I', 'K');
-    cout << "I -> " << p.first << "\t" << "K -> " << p.second << endl;
+    // // Avec 2 lettres trouvées
+    // cout << endl << "----------\nI\tK" << endl;
+    // auto p = chiffre_pair(key, 'I', 'K');
+    // cout << "I -> " << p.first << "\t" << "K -> " << p.second << endl;
 
-    // Avec 2 lettres trouvées sur la même ligne
-    cout << endl << "----------\nN\tA" << endl;
-    p = chiffre_pair(key, 'N', 'A');
-    cout << "N -> " << p.first << "\t" << "A -> " << p.second << endl;
+    // // Avec 2 lettres trouvées sur la même ligne
+    // cout << endl << "----------\nN\tA" << endl;
+    // p = chiffre_pair(key, 'N', 'A');
+    // cout << "N -> " << p.first << "\t" << "A -> " << p.second << endl;
 
-    // Avec 2 lettres trouvées
-    cout << endl << "----------\nB\tV" << endl;
-    p = chiffre_pair(key, 'B', 'V');
-    cout << "B -> " << p.first << "\t" << "V -> " << p.second << endl;
+    // // Avec 2 lettres trouvées
+    // cout << endl << "----------\nB\tV" << endl;
+    // p = chiffre_pair(key, 'B', 'V');
+    // cout << "B -> " << p.first << "\t" << "V -> " << p.second << endl;
 
-    // Avec 1 lettre qui n'existe pas (J)
-    cout << endl << "----------\nM\tJ" << endl;
-    p = chiffre_pair(key, 'M', 'J');
-    cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
+    // // Avec 1 lettre qui n'existe pas (J)
+    // cout << endl << "----------\nM\tJ" << endl;
+    // p = chiffre_pair(key, 'M', 'J');
+    // cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
+    cout << endl << textToCypher << endl << chiffre_texte(textToCypher, key) << endl;
 
     return 0;
 }
