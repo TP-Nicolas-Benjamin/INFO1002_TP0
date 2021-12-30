@@ -177,7 +177,7 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
         for (char& c : v) {
             if (c == a) {
                 coords = coords_of_char(k, c);
-                cout << (coords.first != -1 && coords.second != -1) << endl;
+                // cout << (coords.first != -1 && coords.second != -1) << endl;
                 if (coords.first != -1 && coords.second != -1) {
                     ya = coords.first;
                     xa = coords.second;
@@ -185,9 +185,9 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
             }
             if (c == b) {
                 coords = coords_of_char(k, c);
-                cout << (coords.first != -1 && coords.second != -1) << endl;
+                // cout << (coords.first != -1 && coords.second != -1) << endl;
                 if (coords.first != -1 && coords.second != -1) {
-                    cout << "not -1" << endl;
+                    // cout << "not -1" << endl;
                     yb = coords.first;
                     xb = coords.second;
                 }
@@ -201,10 +201,14 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
     if (xa != -1 && xb != -1 && ya != -1 && yb != -1) {
         pair<char, char> res;
 
-        if (xa == xb) {
+        if (ya == yb) {
             cout << "on same line" << endl;
-        } else if (ya == yb) {
+            res.first = k[ya][(xa+1) % k[ya].size()];
+            res.second = k[yb][(xb+1) % k[yb].size()];
+        } else if (xa == xb) {
             cout << "on same column" << endl;
+            res.first = k[(ya+1) % k.size()][xa];
+            res.second = k[(yb+1) % k.size()][xb];
         } else {
             cout << "different column and line" << endl;
             res.first = k[ya][xb];
@@ -212,7 +216,7 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
         }
         return res;
     } else {
-        cout << "Une des lettres n'est pas disponible dans la clé !";
+        cout << "Une des lettres n'est pas disponible dans la clé !\n";
         return make_pair(a,b);
     }
 }
@@ -236,12 +240,22 @@ int main(int argc, char const *argv[])
     affiche_cle(key);
 
     // Avec 2 lettres trouvées
-    cout << endl << "I\tK" << endl;
+    cout << endl << "----------\nI\tK" << endl;
     auto p = chiffre_pair(key, 'I', 'K');
     cout << "I -> " << p.first << "\t" << "K -> " << p.second << endl;
 
+    // Avec 2 lettres trouvées sur la même ligne
+    cout << endl << "----------\nN\tA" << endl;
+    p = chiffre_pair(key, 'N', 'A');
+    cout << "N -> " << p.first << "\t" << "A -> " << p.second << endl;
+
+    // Avec 2 lettres trouvées
+    cout << endl << "----------\nB\tV" << endl;
+    p = chiffre_pair(key, 'B', 'V');
+    cout << "B -> " << p.first << "\t" << "V -> " << p.second << endl;
+
     // Avec 1 lettre qui n'existe pas (J)
-    cout << endl << "M\tJ" << endl;
+    cout << endl << "----------\nM\tJ" << endl;
     p = chiffre_pair(key, 'M', 'J');
     cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
 
