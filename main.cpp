@@ -166,7 +166,7 @@ pair<int, int> coords_of_char(vector<vector<char>> k, char c) {
     return make_pair(-1,-1);
 }
 
-pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
+pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b, bool isDecipher = false) {
     int xa = -1;
     int xb = -1;
     int ya = -1;
@@ -200,15 +200,20 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
     // cout << ya << "\t" << yb << endl;
     if (xa != -1 && xb != -1 && ya != -1 && yb != -1) {
         pair<char, char> res;
+        int nextPos = isDecipher ? -1 : 1;
 
         if (ya == yb) {
             // cout << "on same line" << endl;
-            res.first = k[ya][(xa+1) % k[ya].size()];
-            res.second = k[yb][(xb+1) % k[yb].size()];
+            xa = (xa+nextPos) < 0 ? k[ya].size() -1 : (xa+nextPos) % k[ya].size();
+            xb = (xb+nextPos) < 0 ? k[yb].size() -1 : (xb+nextPos) % k[yb].size();
+            res.first = k[ya][xa];
+            res.second = k[yb][xb];
         } else if (xa == xb) {
             // cout << "on same column" << endl;
-            res.first = k[(ya+1) % k.size()][xa];
-            res.second = k[(yb+1) % k.size()][xb];
+            ya = (ya+nextPos) % k.size() < 0 ? k[ya].size() -1 : (ya+nextPos) % k.size();
+            yb = (yb+nextPos) % k.size() < 0 ? k[yb].size() -1 : (yb+nextPos) % k.size();
+            res.first = k[ya][xa];
+            res.second = k[yb][xb];
         } else {
             // cout << "different column and line" << endl;
             res.first = k[ya][xb];
@@ -224,32 +229,73 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
 string chiffre_texte(string text, vector<vector<char>> k) {
 
     string res = "";
-    char charToCypher = '\0';
+    char charToCipher = '\0';
 
     for (char& c : text) {
         // if (key_contains_char(k, c)) {
-            if (charToCypher == '\0') charToCypher = c;
+            if (charToCipher == '\0') charToCipher = c;
             else {
-                if (c != charToCypher) {
-                    // cout << endl << "----------\n" << charToCypher << "\t" << c << endl;
-                    pair<char, char> p = chiffre_pair(k, charToCypher, c);
-                    // cout << charToCypher << " -> " << p.first << "\t" << c << " -> " << p.second << endl;
+                if (c != charToCipher) {
+                    // cout << endl << "----------\n" << charToCipher << "\t" << c << endl;
+                    pair<char, char> p = chiffre_pair(k, charToCipher, c);
+                    // cout << charToCipher << " -> " << p.first << "\t" << c << " -> " << p.second << endl;
                     res.push_back(p.first);
                     res.push_back(p.second);
-                    charToCypher = '\0';
+                    charToCipher = '\0';
                 } else {
-                    res.push_back(charToCypher);
-                    res.push_back('X');
-                    res.push_back(c);
-                    charToCypher = '\0';
+                    pair<char, char> p = chiffre_pair(k, charToCipher, 'X');
+                    res.push_back(p.first);
+                    res.push_back(p.second);
+                    charToCipher = c;
                 }
             }
         // }
     }
-    if (charToCypher != '\0') {
-        pair<char, char> p = chiffre_pair(k, charToCypher, 'X');
+    if (charToCipher != '\0') {
+        pair<char, char> p = chiffre_pair(k, charToCipher, 'X');
         res.push_back(p.first);
         res.push_back(p.second);
+    }
+
+    return res;
+}
+
+string dechiffre_texte(string cipher, vector<vector<char>> k) {
+    string res = "";
+    char cipheredChar = '\0';
+
+    for (char& c : cipher) {
+        // if (key_contains_char(k, c)) {
+            if (cipheredChar == '\0') cipheredChar = c;
+            else {
+                if (c != cipheredChar) {
+                    // cout << endl << "----------\n" << cipheredChar << "\t" << c << endl;
+                    pair<char, char> p = chiffre_pair(k, cipheredChar, c, true);
+                    // cout << cipheredChar << " -> " << p.first << "\t" << c << " -> " << p.second << endl;
+                    res.push_back(p.first);
+                    res.push_back(p.second);
+                    cipheredChar = '\0';
+                } else {
+                    res.push_back(cipheredChar);
+                    res.push_back('X');
+                    res.push_back(c);
+                    cipheredChar = '\0';
+                }
+            }
+        // }
+    }
+    if (cipheredChar != '\0') {
+        pair<char, char> p = chiffre_pair(k, cipheredChar, 'X', true);
+        res.push_back(p.first);
+        res.push_back(p.second);
+    }
+
+    if (res.back() == 'X') res.pop_back();
+
+    char lastChar = '\0';
+    for (int i = 0; i < res.size(); i++) {
+        if (res[i] == 'X' && lastChar == res[i+1]) res.erase(res.begin() + i);
+        lastChar = res[i];
     }
 
     return res;
@@ -258,6 +304,7 @@ string chiffre_texte(string text, vector<vector<char>> k) {
 void text_to_valid(string& text) {
     // string tmp = text;
     transform(text.begin(), text.end(), text.begin(), ::toupper);
+    replace(text.begin(), text.end(), 'J', 'I');
     // TODO : vérifier si nécessaire
         // replace(tmp.begin(), tmp.end(), ' ', '\0');
     text.erase(std::remove_if(text.begin(), text.end(), [](char c) { return !std::isalpha(c); }), text.end());
@@ -269,10 +316,10 @@ int main(int argc, char const *argv[])
     string filename = argv[1];
     string keyword_gen = argv[2];
     string text = argv[3];
-    string textToCypher = argv[4];
-    text_to_valid(textToCypher);
-    // transform(textToCypher.begin(), textToCypher.end(), textToCypher.begin(), ::toupper);
-    // replace(textToCypher.begin(), textToCypher.end(), ' ', '\0');
+    string textToCipher = argv[4];
+    text_to_valid(keyword_gen);
+    text_to_valid(text);
+    text_to_valid(textToCipher);
     
     // Initialisation
     set_total(filename);
@@ -305,7 +352,11 @@ int main(int argc, char const *argv[])
     // cout << endl << "----------\nM\tJ" << endl;
     // p = chiffre_pair(key, 'M', 'J');
     // cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
-    cout << endl << textToCypher << endl << chiffre_texte(textToCypher, key) << endl;
+
+    string cipheredText = chiffre_texte(textToCipher, key);
+    cout << endl << textToCipher << endl << cipheredText << endl;
+    cout << endl << cipheredText << endl << dechiffre_texte(cipheredText, key) << endl;
+    // cout << endl << cipheredText << endl << dechiffre_texte("LQ", key) << endl;
 
     return 0;
 }
