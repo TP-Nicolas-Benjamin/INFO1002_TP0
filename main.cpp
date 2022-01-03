@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include "CLI11.hpp"
 
 using namespace std;
 
@@ -301,6 +302,29 @@ string dechiffre_texte(string cipher, vector<vector<char>> k) {
     return res;
 }
 
+vector<vector<char>> perturbe_cle(vector<vector<char>>& k) {
+    int maxRand = 0;
+    for (int i = 0; i < k.size(); i++) {
+        maxRand += k[i].size();
+    }
+    int rand1 = rand() % maxRand;
+    int rand2 = rand1;
+    while (rand2 == rand1) {
+        rand2 = rand() % maxRand;
+    }
+
+    int y1 = (int) (rand1-1) / k.size();
+    int x1 = (rand1-1) % k[y1].size();
+    int y2 = (int) (rand2-1) / k.size();
+    int x2 = (rand2-1) % k[y2].size();
+
+    char tmp = k[y1][x1];
+    k[y1][x1] = k[y2][x2];
+    k[y2][x2] = tmp;
+
+    return k;
+}
+
 void text_to_valid(string& text) {
     // string tmp = text;
     transform(text.begin(), text.end(), text.begin(), ::toupper);
@@ -315,10 +339,10 @@ int main(int argc, char const *argv[])
 {
     string filename = argv[1];
     string keyword_gen = argv[2];
-    string text = argv[3];
-    string textToCipher = argv[4];
+    // string text = argv[3];
+    string textToCipher = argv[3];
     text_to_valid(keyword_gen);
-    text_to_valid(text);
+    // text_to_valid(text);
     text_to_valid(textToCipher);
     
     // Initialisation
@@ -328,9 +352,14 @@ int main(int argc, char const *argv[])
     cout << "Initialisation done -----\n\n" << endl;
 
     // Calculate score of text
-    cout << "Score of " << text << " : " << score(text) << endl << endl;
+    cout << "Score of " << textToCipher << " : " << score(textToCipher) << endl << endl;
 
     key = genere_cle(keyword_gen);
+    affiche_cle(key);
+
+    // Perturbating key
+    perturbe_cle(key);
+    cout << "Perturbated key :" << endl;
     affiche_cle(key);
 
     // // Avec 2 lettres trouvées
@@ -356,7 +385,6 @@ int main(int argc, char const *argv[])
     string cipheredText = chiffre_texte(textToCipher, key);
     cout << endl << textToCipher << endl << cipheredText << endl;
     cout << endl << cipheredText << endl << dechiffre_texte(cipheredText, key) << endl;
-    // cout << endl << cipheredText << endl << dechiffre_texte("LQ", key) << endl;
 
     return 0;
 }
