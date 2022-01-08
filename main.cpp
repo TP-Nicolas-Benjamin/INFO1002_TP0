@@ -123,8 +123,8 @@ vector<vector<char>> genere_cle(string texte) {
             } 
         }
 
-        cout << "last y : " << last_y << endl;
-        cout << "last x : " << last_x << endl;
+        // cout << "last y : " << last_y << endl;
+        // cout << "last x : " << last_x << endl;
 
         for (vector<char> v : alphabet) {
             if (last_x == 5) {
@@ -148,7 +148,7 @@ vector<vector<char>> genere_cle(string texte) {
 void affiche_cle(vector<vector<char>> k) {
     int counter = 0;
 
-    cout << "Current key is : " << endl;
+    // cout << "Current key is : " << endl;
     for (vector<char> v : k) {
         for (char& c : v) {
             cout << c << " ";
@@ -167,7 +167,7 @@ pair<int, int> coords_of_char(vector<vector<char>> k, char c) {
     return make_pair(-1,-1);
 }
 
-pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b, bool isDecipher = false) {
+pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b) {
     int xa = -1;
     int xb = -1;
     int ya = -1;
@@ -201,18 +201,17 @@ pair<char, char> chiffre_pair(vector<vector<char>> k, char a, char b, bool isDec
     // cout << ya << "\t" << yb << endl;
     if (xa != -1 && xb != -1 && ya != -1 && yb != -1) {
         pair<char, char> res;
-        int nextPos = isDecipher ? -1 : 1;
 
         if (ya == yb) {
             // cout << "on same line" << endl;
-            xa = (xa+nextPos) < 0 ? k[ya].size() -1 : (xa+nextPos) % k[ya].size();
-            xb = (xb+nextPos) < 0 ? k[yb].size() -1 : (xb+nextPos) % k[yb].size();
+            xa = (xa+1) % k[ya].size();
+            xb = (xb+1) % k[yb].size();
             res.first = k[ya][xa];
             res.second = k[yb][xb];
         } else if (xa == xb) {
             // cout << "on same column" << endl;
-            ya = (ya+nextPos) % k.size() < 0 ? k[ya].size() -1 : (ya+nextPos) % k.size();
-            yb = (yb+nextPos) % k.size() < 0 ? k[yb].size() -1 : (yb+nextPos) % k.size();
+            ya = (ya+1) % k.size();
+            yb = (yb+1) % k.size();
             res.first = k[ya][xa];
             res.second = k[yb][xb];
         } else {
@@ -261,7 +260,18 @@ string chiffre_texte(string text, vector<vector<char>> k) {
     return res;
 }
 
+vector<vector<char>> inverse_cle(vector<vector<char>> k) {
+    vector<vector<char>> inverse_k = k;
+    for (int y = 0; y < k.size(); y++) {
+        for (int x = 0; x < k[y].size(); x++) {
+            inverse_k[4-y][4-x] = k[y][x];
+        }
+    }
+    return inverse_k;
+}
+
 string dechiffre_texte(string cipher, vector<vector<char>> k) {
+    vector<vector<char>> inverse_k = inverse_cle(k);
     string res = "";
     char cipheredChar = '\0';
 
@@ -271,7 +281,7 @@ string dechiffre_texte(string cipher, vector<vector<char>> k) {
             else {
                 if (c != cipheredChar) {
                     // cout << endl << "----------\n" << cipheredChar << "\t" << c << endl;
-                    pair<char, char> p = chiffre_pair(k, cipheredChar, c, true);
+                    pair<char, char> p = chiffre_pair(inverse_k, cipheredChar, c);
                     // cout << cipheredChar << " -> " << p.first << "\t" << c << " -> " << p.second << endl;
                     res.push_back(p.first);
                     res.push_back(p.second);
@@ -286,7 +296,7 @@ string dechiffre_texte(string cipher, vector<vector<char>> k) {
         // }
     }
     if (cipheredChar != '\0') {
-        pair<char, char> p = chiffre_pair(k, cipheredChar, 'X', true);
+        pair<char, char> p = chiffre_pair(inverse_k, cipheredChar, 'X');
         res.push_back(p.first);
         res.push_back(p.second);
     }
@@ -302,7 +312,7 @@ string dechiffre_texte(string cipher, vector<vector<char>> k) {
     return res;
 }
 
-vector<vector<char>> perturbe_cle(vector<vector<char>>& k) {
+vector<vector<char>> perturbe_cle(vector<vector<char>> k) {
     int maxRand = 0;
     for (int i = 0; i < k.size(); i++) {
         maxRand += k[i].size();
@@ -313,26 +323,124 @@ vector<vector<char>> perturbe_cle(vector<vector<char>>& k) {
         rand2 = rand() % maxRand;
     }
 
-    int y1 = (int) (rand1-1) / k.size();
-    int x1 = (rand1-1) % k[y1].size();
-    int y2 = (int) (rand2-1) / k.size();
-    int x2 = (rand2-1) % k[y2].size();
+    int y1 = (int) rand1 / k.size();
+    int x1 = rand1 % k[y1].size();
+    int y2 = (int) rand2 / k.size();
+    int x2 = rand2 % k[y2].size();
 
+    //cout << k[y1][x1] << " -> " << k[y2][x2] << "\t" << k[y2][x2] << " -> " << k[y1][x1] << endl;
     char tmp = k[y1][x1];
     k[y1][x1] = k[y2][x2];
     k[y2][x2] = tmp;
+    return k;
+}
+
+vector<vector<char>> make_random_key() {
+    vector<vector<char>> kcpy = alphabet;
+    vector<vector<char>> k = {
+        {'\0','\0','\0','\0','\0'}, 
+        {'\0','\0','\0','\0','\0'}, 
+        {'\0','\0','\0','\0','\0'}, 
+        {'\0','\0','\0','\0','\0'}, 
+        {'\0','\0','\0','\0','\0'}
+    };
+
+    int maxRand = k.size();
+
+    for (vector<char> v : kcpy) {
+        for (char& c : v) {
+            int x = rand() % maxRand;
+            int y = rand() % maxRand;
+            while (k[y][x] != '\0') {
+                x = rand() % maxRand;
+                y = rand() % maxRand;
+            }
+            k[y][x] = c;
+        }
+    }
 
     return k;
+}
+
+vector<vector<char>> craque(string cipher, int n) {
+    /*
+    --- pseudo code ---
+    clé = clé aléatoire
+    --- on teste N permutations de la clé ---
+    pour k de 1 à N:
+        clé_tmp = echange 2 caractères dans clé
+        si clé_tmp meilleur que clé:
+            clé = clé_tmp
+    */
+
+    double best_score = -100000000000000;
+    vector<vector<char>> k = make_random_key();
+    // affiche_cle(k);
+    vector<vector<char>> tmp_key;
+
+    for (int i = 0; i < n-1; i++) {
+        tmp_key = perturbe_cle(k);
+        // string k_decipher = dechiffre_texte(cipher, k);
+        string tmp_decipher = dechiffre_texte(cipher, tmp_key);
+        double score_tmp = score(tmp_decipher);
+
+        if (score_tmp > best_score) {
+            // cout << "BETTER SCORE ---" << endl;
+            best_score = score_tmp;
+            k = tmp_key;
+        }
+    }
+
+    return inverse_cle(k);
 }
 
 void text_to_valid(string& text) {
     // string tmp = text;
     transform(text.begin(), text.end(), text.begin(), ::toupper);
     replace(text.begin(), text.end(), 'J', 'I');
-    // TODO : vérifier si nécessaire
-        // replace(tmp.begin(), tmp.end(), ' ', '\0');
     text.erase(std::remove_if(text.begin(), text.end(), [](char c) { return !std::isalpha(c); }), text.end());
     // return tmp;
+}
+
+void test(vector<vector<char>> k, string text) {
+    // Perturbating key
+    k = perturbe_cle(k);
+    cout << endl << endl << "----- Perturbated key :" << endl;
+    affiche_cle(k);
+
+    // Avec 2 lettres trouvées
+    cout << endl << "----- Changement de lettres : " << endl;
+    cout << "----------\nI\tK" << endl;
+    auto p = chiffre_pair(k, 'I', 'K');
+    cout << "I -> " << p.first << "\t" << "K -> " << p.second << endl;
+
+    // Avec 2 lettres trouvées sur la même ligne
+    cout << endl << "----------\nN\tA" << endl;
+    p = chiffre_pair(k, 'N', 'A');
+    cout << "N -> " << p.first << "\t" << "A -> " << p.second << endl;
+
+    // Avec 2 lettres trouvées
+    cout << endl << "----------\nB\tV" << endl;
+    p = chiffre_pair(k, 'B', 'V');
+    cout << "B -> " << p.first << "\t" << "V -> " << p.second << endl;
+
+    // Avec 1 lettre qui n'existe pas (J)
+    cout << endl << "----------\nM\tJ" << endl;
+    p = chiffre_pair(k, 'M', 'J');
+    cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
+
+    string cipheredText = chiffre_texte(text, key);
+    // Dechiffre le texte avec la fonction naïve
+    cout << endl << "----- Chiffre le texte" << endl;
+    cout << text << endl << cipheredText << endl;
+    cout << endl << "----- Dechiffre le texte avec la fonction naïve" << endl;
+    cout << cipheredText << endl << dechiffre_texte(cipheredText, key) << endl;
+
+    cout << endl << endl << "----- CRAQUE (don't think it's working) : " << endl;
+    auto cle = craque(cipheredText, 1000);
+    cout << "Clé avec la score le plus élevé : " << endl;
+    affiche_cle(cle);
+    cout << endl << "Texte décrypté avec la clé ci-dessus : "<< endl << dechiffre_texte(cipheredText, inverse_cle(cle)) << endl;
 }
 
 int main(int argc, char const *argv[])
@@ -347,44 +455,18 @@ int main(int argc, char const *argv[])
     
     // Initialisation
     set_total(filename);
-    cout << "\n\nTotal tetragrammes : " << total_tetragrammes << endl;
+    cout << "----- Total tetragrammes : " << total_tetragrammes << endl;
     log_init(filename);
-    cout << "Initialisation done -----\n\n" << endl;
+    cout << "----- Initialisation done -----\n\n" << endl;
 
     // Calculate score of text
-    cout << "Score of " << textToCipher << " : " << score(textToCipher) << endl << endl;
+    cout << "----- Score of " << textToCipher << " : " << score(textToCipher) << endl << endl;
 
     key = genere_cle(keyword_gen);
+    cout << "----- Clé générée à partir du mot \"" << keyword_gen << "\"" << endl;
     affiche_cle(key);
 
-    // Perturbating key
-    perturbe_cle(key);
-    cout << "Perturbated key :" << endl;
-    affiche_cle(key);
-
-    // // Avec 2 lettres trouvées
-    // cout << endl << "----------\nI\tK" << endl;
-    // auto p = chiffre_pair(key, 'I', 'K');
-    // cout << "I -> " << p.first << "\t" << "K -> " << p.second << endl;
-
-    // // Avec 2 lettres trouvées sur la même ligne
-    // cout << endl << "----------\nN\tA" << endl;
-    // p = chiffre_pair(key, 'N', 'A');
-    // cout << "N -> " << p.first << "\t" << "A -> " << p.second << endl;
-
-    // // Avec 2 lettres trouvées
-    // cout << endl << "----------\nB\tV" << endl;
-    // p = chiffre_pair(key, 'B', 'V');
-    // cout << "B -> " << p.first << "\t" << "V -> " << p.second << endl;
-
-    // // Avec 1 lettre qui n'existe pas (J)
-    // cout << endl << "----------\nM\tJ" << endl;
-    // p = chiffre_pair(key, 'M', 'J');
-    // cout << "M -> " << p.first << "\t" << "J -> " << p.second << endl;
-
-    string cipheredText = chiffre_texte(textToCipher, key);
-    cout << endl << textToCipher << endl << cipheredText << endl;
-    cout << endl << cipheredText << endl << dechiffre_texte(cipheredText, key) << endl;
+    test(key, textToCipher);
 
     return 0;
 }
